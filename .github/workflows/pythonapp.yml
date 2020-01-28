@@ -1,4 +1,4 @@
-name: Test Mimir
+name: Test ConfigReader
 
 on: [push]
 
@@ -25,5 +25,5 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        pip install pytest
+        pip install pytest pytest-cov pytest-mock
         python -m pytest -v --cov-report term-missing --cov=configreader tests/ 
