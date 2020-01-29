@@ -67,3 +67,39 @@ class ConfigReaderBase:
     def getList(value):
         value = value.replace(" ", "")
         return value.split(",")
+
+
+class AutoConfigReader(ConfigReaderBase):
+    """
+    Configreader, that automatically set section as attributes of the ConfigReader object
+
+    Args:
+      pythtoConfig (str) : Path the config file
+      multilineSep (str) : Separator for multiline option (see ConfigReaderBase.readMulitlineOption)
+      toplevelSection (str) : If string is passed, the options in this section will become class attributes
+    """
+    def __init__(self, pathtoConfig, multilineSep=" : ", toplevelSection=None):
+        super().__init__(pathtoConfig)
+        
+        for section in self.readConfig.sections():
+            thisSection = {}
+            for option in self.readConfig[section]:
+                value = self.readConfig.get(section, option)
+                if "\n" in value:
+                    if "," in value:
+                        optionType = "List"
+                    else:
+                        optionType = "Single"
+                    thisSection[option] = self.readMulitlineOption(section,
+                                                                   option,
+                                                                   optionType,
+                                                                   multilineSep)
+                elif "," in value:
+                    thisSection[option] = self.getList(value)
+                else:
+                    thisSection[option] = value
+            if toplevelSection == section:
+                for option in thisSection:
+                    setattr(self, option, thisSection[option])
+            else:
+                setattr(self, section, thisSection)

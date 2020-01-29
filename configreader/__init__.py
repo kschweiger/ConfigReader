@@ -1,3 +1,3 @@
-from .base import ConfigReaderBase
+from .base import ConfigReaderBase, AutoConfigReader
 
-__all__ = ["ConfigReaderBase"]
+__all__ = ["ConfigReaderBase", "AutoConfigReader"]
