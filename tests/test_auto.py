@@ -71,3 +71,36 @@ def test_AutoConfigReader_init_toplevelSection(mocker, mockConfigAndExpectation,
                 assert getattr(config, option) == configExpectationFormatted[key][option]
         else:
             assert getattr(config, key) == configExpectationFormatted[key]
+
+@pytest.mark.parametrize("exclusion", [["Section1","Section2"], "Section1"])
+def test_AutoConfigReader_init_exclusion(mocker, mockConfigAndExpectation, exclusion):
+    mockConfig, configExpectation, configExpectationFormatted = mockConfigAndExpectation
+    mocker.patch.object(ConfigReaderBase, "readConfig", return_value=mockConfig)
+
+    config = AutoConfigReader("/path/to/config.cfg", exclude=exclusion)
+
+    excludedSections = [exclusion] if not isinstance(exclusion, list) else exclusion 
+    
+    for key in configExpectationFormatted:
+        if key in excludedSections:
+            assert not hasattr(config, key)
+        else:
+            assert hasattr(config, key)
+
+@pytest.mark.parametrize("exclusion", [{}, 1, 1.2])
+def test_AutoConfigReader_init_exclusion_typeerror(mocker, mockConfigAndExpectation, exclusion):
+    mockConfig, configExpectation, configExpectationFormatted = mockConfigAndExpectation
+    mocker.patch.object(ConfigReaderBase, "readConfig", return_value=mockConfig)
+
+    with pytest.raises(TypeError):
+        AutoConfigReader("/path/to/config.cfg", exclude=exclusion)
+
+@pytest.mark.parametrize("exclusion", ["NoneExistingSection",
+                                       ["NoneExistingSection", "Section1"],
+                                       ["Section1", "NoneExistingSection"]])
+def test_AutoConfigReader_init_exclusion_runtimeerror(mocker, mockConfigAndExpectation, exclusion):
+    mockConfig, configExpectation, configExpectationFormatted = mockConfigAndExpectation
+    mocker.patch.object(ConfigReaderBase, "readConfig", return_value=mockConfig)
+
+    with pytest.raises(RuntimeError):
+        AutoConfigReader("/path/to/config.cfg", exclude=exclusion)

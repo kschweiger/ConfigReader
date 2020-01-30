@@ -77,11 +77,28 @@ class AutoConfigReader(ConfigReaderBase):
       pythtoConfig (str) : Path the config file
       multilineSep (str) : Separator for multiline option (see ConfigReaderBase.readMulitlineOption)
       toplevelSection (str) : If string is passed, the options in this section will become class attributes
+      exclude (str, list) : Passed string and will be checked against section and if present excluded
+
+    Raises:
+      TypeError : Raised if passed exclude is not str or list
+      RuntimeError : Raised if at least one element in exclude is no section
     """
-    def __init__(self, pathtoConfig, multilineSep=" : ", toplevelSection=None):
+    def __init__(self, pathtoConfig, multilineSep=" : ", toplevelSection=None, exclude=[]):
+        if not (isinstance(exclude, str) or isinstance(exclude, list)):
+            raise TypeError("exclusion is required to be str or list bit is %s"%(type(exclude)))
+
+        if isinstance(exclude, str):
+            exclude = [exclude]
+        
         super().__init__(pathtoConfig)
+
+        for excludeSection in exclude:
+            if excludeSection not in self.readConfig.sections():
+                raise RuntimeError("Section %s was passed for excludion but is not in config file"%(excludeSection))
         
         for section in self.readConfig.sections():
+            if section in exclude:
+                continue
             thisSection = {}
             for option in self.readConfig[section]:
                 value = self.readConfig.get(section, option)
