@@ -7,26 +7,35 @@ class ConfigReaderBase:
     Base class for configreader.
 
     Args:
-      pathtoConfig (str) : Path to config file, that would be opened with the python configparser module
+      config (str) : Path to config file, that would be opened with the python configparser module
+      config (dict) : The usal method to initialize configparser.ConfigParser from a dict
+
 
     Attributes:
       readConfig (configparser.ConfigParser)
       path (str) : Original path to the config
     """
-    def __init__(self, pathtoConfig):
-        logging.info("Loading config %s", pathtoConfig)
-        thisconfig = self.readConfig(pathtoConfig)
+    def __init__(self, config):
+        logging.info("Loading config %s", config)
+        thisconfig = self.readConfig(config)
         self.readConfig = thisconfig
-        self.path = pathtoConfig
-
-    def readConfig(self, pathtoConfig):
+        self.path = config
+    
+    def readConfig(self, config):
         """
         Create and load the configparser object.
         """
         thisconfig = configparser.ConfigParser()
         thisconfig.optionxform = str  # Use this so the section names keep Uppercase letters
-        thisconfig.read(pathtoConfig)
 
+        if isinstance(config, dict):
+            for key in config:
+                thisconfig[key] = config[key]
+        elif isinstance(config, str):
+            thisconfig.read(config)
+        else:
+            raise TypeError("Passed config is type %s but only dict and str are supported."%type(config))
+        
         return thisconfig
 
     def readMulitlineOption(self, section, thisOption, optionType, sep=" : "):
@@ -119,14 +128,14 @@ class AutoConfigReader(ConfigReaderBase):
       TypeError : Raised if passed exclude is not str or list
       RuntimeError : Raised if at least one element in exclude is no section
     """
-    def __init__(self, pathtoConfig, multilineSep=" : ", toplevelSection=None, exclude=[]):
+    def __init__(self, config, multilineSep=" : ", toplevelSection=None, exclude=[]):
         if not (isinstance(exclude, str) or isinstance(exclude, list)):
             raise TypeError("exclusion is required to be str or list bit is %s"%(type(exclude)))
 
         if isinstance(exclude, str):
             exclude = [exclude]
 
-        super().__init__(pathtoConfig)
+        super().__init__(config)
 
         for excludeSection in exclude:
             if excludeSection not in self.readConfig.sections():

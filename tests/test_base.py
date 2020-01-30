@@ -140,3 +140,18 @@ def test_ConfigReaderBase_setOptionWithDefault_missing(mocker, mockConfigAndExpe
     config = ConfigReaderBase("/path/to/config.cfg")
 
     assert config.setOptionWithDefault("Section4", option, default, getter) == default
+
+def test_ConfigReaderBase_initFromDict(mocker, mockConfigAndExpectation):
+    mockConfig, configExpectation = mockConfigAndExpectation
+    mocker.patch.object(configparser.ConfigParser, "read")
+    
+    config = ConfigReaderBase(configExpectation)
+
+    configparser.ConfigParser.read.assert_not_called()
+    assert mockConfig == config.readConfig
+
+@pytest.mark.parametrize("inputConfig", [1.2, 1, [], ()])
+def test_ConfigReaderBase_init_exceptions(inputConfig):
+    with pytest.raises(TypeError):
+        config = ConfigReaderBase(inputConfig)
+    
