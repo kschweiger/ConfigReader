@@ -4,7 +4,14 @@ import logging
 
 class ConfigReaderBase:
     """
-    Base class of a config reader
+    Base class for configreader.
+
+    Args:
+      pathtoConfig (str) : Path to config file, that would be opened with the python configparser module
+
+    Attributes:
+      readConfig (configparser.ConfigParser)
+      path (str) : Original path to the config
     """
     def __init__(self, pathtoConfig):
         logging.info("Loading config %s", pathtoConfig)
@@ -14,7 +21,7 @@ class ConfigReaderBase:
 
     def readConfig(self, pathtoConfig):
         """
-        Create and load the configparser object. Move the separate function for unit testability
+        Create and load the configparser object.
         """
         thisconfig = configparser.ConfigParser()
         thisconfig.optionxform = str  # Use this so the section names keep Uppercase letters
@@ -23,6 +30,18 @@ class ConfigReaderBase:
         return thisconfig
 
     def readMulitlineOption(self, section, thisOption, optionType, sep=" : "):
+        """
+        Read option (thisOption) in a section (section) that has multiple lines where option and value are separated with sep
+
+        Args:
+          section (str) : Section
+          thisOption (str) : Option
+          optionType (str) : Single: Full line after sep is treated as value. List: Line will be split at ,
+          sept (str) : Separator between option and value
+
+        Raises:
+          RuntimeError : Raised if optionType is not Single or List
+        """
         ret = {}
         option = self.readConfig.get(section, thisOption)
         for elem in option.split("\n"):
@@ -41,6 +60,16 @@ class ConfigReaderBase:
         return ret
 
     def setOptionWithDefault(self, section, option, default, getterType="str"):
+        """
+        Wrapper for configparser.ConfigParser.get() that inserts default value if option is not available.
+
+        Args:
+          section (str) : Section
+          option (str) : Option
+          default (any type) : Default value that will be returned of option is not available.
+                               If None is passed and the option is present and is "None", None will be returned
+          getterType (str) : What value is expected to be read (float, int, bool, intlist, list, str)
+        """
         if self.readConfig.has_option(section, option):
             if getterType == "float":
                 return self.readConfig.getfloat(section, option)
@@ -61,6 +90,13 @@ class ConfigReaderBase:
             return default
 
     def getListOption(self, section, option):
+        """
+        Interpret the option (option) in section (section) as komma separated list
+
+        Args:
+          section (str) : Section
+          option (str) : Option
+        """
         return self.getList(self.readConfig.get(section, option))
 
     @staticmethod
@@ -89,13 +125,13 @@ class AutoConfigReader(ConfigReaderBase):
 
         if isinstance(exclude, str):
             exclude = [exclude]
-        
+
         super().__init__(pathtoConfig)
 
         for excludeSection in exclude:
             if excludeSection not in self.readConfig.sections():
                 raise RuntimeError("Section %s was passed for excludion but is not in config file"%(excludeSection))
-        
+
         for section in self.readConfig.sections():
             if section in exclude:
                 continue
