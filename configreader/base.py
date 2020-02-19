@@ -1,8 +1,8 @@
-import configparser
+import ConfigParser as configparser
 import logging
 
 
-class ConfigReaderBase:
+class ConfigReaderBase(object):
     """
     Base class for configreader.
 
@@ -135,7 +135,7 @@ class AutoConfigReader(ConfigReaderBase):
         if isinstance(exclude, str):
             exclude = [exclude]
 
-        super().__init__(config)
+        super(AutoConfigReader, self).__init__(config)
 
         for excludeSection in exclude:
             if excludeSection not in self.readConfig.sections():
@@ -145,7 +145,7 @@ class AutoConfigReader(ConfigReaderBase):
             if section in exclude:
                 continue
             thisSection = {}
-            for option in self.readConfig[section]:
+            for option in self.readConfig.options(section):
                 value = self.readConfig.get(section, option)
                 if "\n" in value:
                     if "," in value:
